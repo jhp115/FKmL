@@ -25,7 +25,7 @@
 #' used in \code{SFclust} function.
 #' 
 #' @importFrom proxy dist
-
+#' 
 #' @examples
 #' # Example trajectories with 3 variables
 #' traj1 <- data.frame(

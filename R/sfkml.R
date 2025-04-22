@@ -2,7 +2,7 @@
 #' 
 #' @description This function standardizes multidimensional functional data using provided scaling factors,
 #' computes pairwise Fréchet distances between trajectories for each variable, and returns a
-#' distance array (3D array of distance matrices).
+#' distance array (3-dimensional array of distance matrices).
 #' 
 #' @param dt A long-format data.frame containing the following columns in the specified order:
 #'   - \code{ID}: An identifier for each trajectory.
@@ -22,11 +22,12 @@
 #' @details
 #' The \code{dist.array} function first applies scaling to the \code{Time} and each measured variable.
 #' Then, it computes pairwise Fréchet distances between trajectories for each variable separately.
-#' The output is a 3D array where each slice corresponds to a variable-specific distance matrix.
+#' The output is a 3-dimensional array in which each slice corresponds to a variable-specific distance matrix.
 #'
-#' Unlike the mfkml() function, which requires at least three measurements for an entire trajectory,
-#' the SFKmL method (which uses \code{dist.array}) allows for trajectories with missing values as long as
-#' each variable has at least three time points for each trajectory. Therefore, \code{dt} may include missing values.
+#' Unlike the \code{mfkml} function, which requires at least three measurements across time for each trajectory,
+#' the SFKmL ((Sparse multi-dimensional Fréchet distance-based K-medoids for Longitudinal data), which uses \code{dist.array}, 
+#' allows for trajectories with missing values, as long as each variable has at least three time points for each trajectory. 
+#' Therefore, \code{dt} may include missing values.
 #'
 #' @return A 3-dimensional array of pairwise distances with dimensions \code{[n, n, p]}, where:
 #'   \describe{
@@ -35,7 +36,8 @@
 #'   }
 #' Each slice \code{[, , k]} is a distance matrix for variable \code{k}.
 #'
-#' @seealso \code{\link{mfkml}}, \code{\link{SFclust}}
+#' @importFrom abind abind
+#' 
 #' @export
 
 dist.array <- function(dt, time_scale, var_scales){
@@ -94,7 +96,7 @@ dist.array <- function(dt, time_scale, var_scales){
   id <- unique(dt[, 1])
   dist.mat <- function(p) {outer(id, id, Vectorize(pairwise), k = p)}
   
-  # Construct 3D distance array
+  # Construct 3-dimensional distance array
   dist.ary <- NULL
   for (k in 1:num.var) {
     dist.ary <- abind(dist.ary, dist.mat(k), along = 3)
@@ -105,7 +107,7 @@ dist.array <- function(dt, time_scale, var_scales){
 
 # UpdateCs.SFclust: internal function, used within SFclust() function
 # Performs k-medoids clustering given a (possibly weighted) distance array.
-# The function supports both 3D arrays (multiple variables) and 2D matrices (single variable).
+# The function supports both 3-dimensional arrays (multiple variables) and 2D matrices (single variable).
 # When weights (wss) are provided, a weighted sum of distances is used.
 # Returns a vector of cluster assignments.
 
@@ -237,8 +239,8 @@ bcss.feature <- function(p, tot.num.obs, clust.num.obs, dist.ary, clust.assign) 
 }
 
 # optim.w: internal function, used within SFclust() function
-# Computes the optimal weight vector `w` for a given input vector `a` under an L1-norm constraint.
-# The resulting weight vector is L2-normalized and satisfies a target L1-norm (approximately equal to `S`).
+# Computes the optimal weight vector `w` for a given input vector `a` under an L1 norm constraint.
+# The resulting weight vector is L2-normalized and satisfies a target L1 norm (approximately equal to `S`).
 # Returns a numeric vector representing the optimized and normalized weights.
 
 optim.w <- function(a, S) {
@@ -263,7 +265,7 @@ optim.w <- function(a, S) {
     t1 <- sum(sa[1:l])
     t2 <- sum(sa[1:l]^2)
     
-    # Solve quadratic to find lambda that controls L1-norm
+    # Solve quadratic to find lambda that controls L1 norm
     bb <- t1^2/l - (t1^2 - t2*S^2)/(l - S^2)
     b <- t1 * (l - S^2)
     aval <- l * (l - S^2)
@@ -290,7 +292,7 @@ optim.w <- function(a, S) {
   colnames(tot)[1:3] <- c("lambda", "l2", "l1")
   colnames(tot)[4:(3+p)] <- paste0("x", seq(1, p))
   
-  # Find solution closest to target L1-norm S
+  # Find solution closest to target L1 norm S
   l1.bound <- tot$l1[!is.nan(tot$l1)]
   soln.row <- which.min(abs(l1.bound - S))
   
@@ -299,10 +301,10 @@ optim.w <- function(a, S) {
 
 # UpdateWs.SFclust: internal function, used within SFclust() function
 # Computes updated feature weight vector (`wss`) based on BCSS (between-cluster sum of squares)
-# for each feature and enforces sparsity via L1-norm constraint using `optim.w`.
+# for each feature and enforces sparsity via L1 norm constraint using `optim.w`.
 #
 # Output: A list with:
-# - wss: Normalized feature weights satisfying the L1-norm constraint.
+# - wss: Normalized feature weights satisfying the L1 norm constraint.
 # - bcss: Raw BCSS values per feature before optimization.
 
 UpdateWs.SFclust <- function(clust.assign, dist.ary, l1bound, num.var) {
@@ -320,7 +322,7 @@ UpdateWs.SFclust <- function(clust.assign, dist.ary, l1bound, num.var) {
                             dist.ary = dist.ary, 
                             clust.assign = clust.assign)
   
-  # Compute optimal weights using BCSS and target L1-norm
+  # Compute optimal weights using BCSS and target L1 norm
   wss <- optim.w(bcss.perfeature, l1bound)
   
   return(list(wss = wss, bcss = bcss.perfeature))
@@ -335,7 +337,7 @@ UpdateWs.SFclust <- function(clust.assign, dist.ary, l1bound, num.var) {
 #' 
 #' @param k The number of clusters.
 #' @param seed A numeric value used to set the random seed for reproducibility.
-#' @param l1bound A bound on the L1 norm for the weight updates. It must lie between 1 and the square root of the number of variables.
+#' @param l1bound A bound on the \eqn{\ell_1} norm for the weight updates. It must lie between 1 and the square root of the number of variables.
 #' @param dist.ary A 3-dimensional array of pairwise Fréchet distances. The array should be of shape (n, n, p), where \code{n} is the number of trajectories and 
 #' \code{p} is the number of variables. Each \code{dist.ary[,,j]} stores the pairwise distances for the \code{j}-th variable.
 #' @param maxIter The maximum number of iterations before stopping if convergence is not reached. Default is 20.
@@ -351,13 +353,11 @@ UpdateWs.SFclust <- function(clust.assign, dist.ary, l1bound, num.var) {
 #' }
 #'
 #' @details
-#' The function assumes that the input `dist.ary` contains pairwise distances between 
-#' trajectories for each feature, using a distance metric such as generalized Fréchet distance.
-#' Clustering is performed via a k-medoids algorithm (using `UpdateCs.SFclust`), while feature
-#' weights are updated using between-cluster sum of squares (BCSS) with sparsity control 
-#' (via `UpdateWs.SFclust` and `optim.w`).
-#' If the number of features is one, only clustering is performed and no feature weighting is applied.
-#'
+#' The function assumes that the input \code{dist.array} contains pairwise distances between trajectories for each variable, 
+#' using the generalized Fréchet distance. Clustering is performed via a k-medoids algorithm, 
+#' and feature weights are updated using between-cluster sum of squares (BCSS) with sparsity control. 
+#' If the number of variables is one, only clustering is performed, and no variable weighting is applied.
+#' 
 #' @export
 
 SFclust <- function(k, seed, l1bound, dist.ary, maxIter = 20, eps = 1e-4) {
@@ -384,8 +384,8 @@ SFclust <- function(k, seed, l1bound, dist.ary, maxIter = 20, eps = 1e-4) {
   
   # If only one variable is provided, return cluster assignment only
   if (num.var == 1) {
+    messsage("There is only one variable; weight update is skipped.")
     return(list(clust = css))
-    stop("There is only one variable; no need to update w")
   }
   
   # Initialize variable weights
@@ -427,11 +427,11 @@ SFclust <- function(k, seed, l1bound, dist.ary, maxIter = 20, eps = 1e-4) {
 }
 
 
-# permute.distance.array: internal function, used only within SFclust.permute()
+# permute.distance.array: internal function, used only within SFclust.permute() function
 # This function performs permutation on the lower triangle of the distance matrix for each variable.
 # It shuffles the pairwise distances between trajectories within each variable to create a permuted distance array.
 # The function ensures that the permuted distance matrix retains the original structure while randomizing the lower triangle.
-# Returns a 3-dimensional array (dist.ary.perm) of permuted pairwise distances with the same structure as the input distance array.
+# Returns a 3-dimensional array of permuted pairwise distances with the same structure as the input distance array.
 
 permute.distance.array <- function(dist.ary, seed) {
   
@@ -458,11 +458,11 @@ permute.distance.array <- function(dist.ary, seed) {
 #' @title Perform Permutation-Based Clustering Evaluation for SFclust
 #'
 #' @description Performs a permutation-based analysis to evaluate clustering results across different 
-#' values of the L1-norm constraint (`s`). This function is designed to help determine the 
-#' most appropriate L1-norm value by comparing the observed clustering outcome with those 
+#' values of the \eqn{\ell_1} norm constraint (`s`). This function is designed to help determine the 
+#' most appropriate \eqn{\ell_1} norm value by comparing the observed clustering outcome with those 
 #' obtained under random permutations.
 #' 
-#' The function computes gap statistics for each L1-norm constraint value based on permuted 
+#' The function computes gap statistics for each \eqn{\ell_1} norm constraint value based on permuted 
 #' versions of the input distance array, and identifies the optimal `s` as the one 
 #' maximizing the gap statistic. Optional plots can visualize the gap patterns.
 #' 
@@ -471,29 +471,31 @@ permute.distance.array <- function(dist.ary, seed) {
 #' @param k An integer specifying the number of clusters.
 #' @param nperms An integer specifying the number of permutations to perform.
 #' @param seed A numeric value used to set the random seed for reproducibility.
-#' @param l1b A numeric vector of L1-norm constraint values to test during clustering. These values 
+#' @param l1b A numeric vector of \eqn{\ell_1} norm constraint values to test during clustering. These values 
 #' control the sparsity of the weights during clustering.
 #' @param plot.gap Logical; if `TRUE` (default), plots the gap between actual and permuted clustering results.
-#' @param plot.gap.l1b Logical; if `TRUE` (default), plots the gap against L1-norm constraint values. 
+#' @param plot.gap.l1b Logical; if `TRUE` (default), plots the gap against \eqn{\ell_1} norm constraint values. 
 #' If `FALSE`, plots against the number of nonzero weights.
 #'
 #' @return A list containing the following components:
 #' \describe{
-#'   \item{totss}{A numeric vector of total within-cluster sum of squared distances for each L1-norm value.}
-#'   \item{permtotss}{A matrix of total sum of squared distances for each permutation and each L1-norm value.}
-#'   \item{nnonzerowss}{A numeric vector of the number of nonzero weights for each L1-norm value.}
+#'   \item{totss}{A numeric vector of total within-cluster sum of squared distances for each \eqn{\ell_1} norm value.}
+#'   \item{permtotss}{A matrix of total sum of squared distances for each permutation and each \eqn{\ell_1} norm value.}
+#'   \item{nnonzerowss}{A numeric vector of the number of nonzero weights for each \eqn{\ell_1} norm value.}
 #'   \item{gaps}{A numeric vector of gap statistics: the difference between observed and permuted clustering results.}
 #'   \item{sdgaps}{A numeric vector of standard deviations of the gaps across permutations.}
-#'   \item{l1bounds}{A vector of L1-norm constraint values that were successfully processed without error.}
-#'   \item{bestl1b}{The L1-norm constraint value that yielded the largest gap.}
+#'   \item{l1bounds}{A vector of \eqn{\ell_1} norm constraint values that were successfully processed without error.}
+#'   \item{bestl1b}{The \eqn{\ell_1} norm constraint value that yielded the largest gap.}
 #'   \item{failed_j}{Indices of `l1b` values that caused errors during the clustering process.}
-#'   \item{failed_l1b}{The actual L1-norm values that caused errors.}
+#'   \item{failed_l1b}{The actual \eqn{\ell_1} norm values that caused errors.}
 #' }
 #'
 #' @details
 #' This function helps assess the robustness of clustering structure and select an optimal level of sparsity.
 #' If any clustering attempt fails (e.g., due to convergence issues or weight update errors), the corresponding 
 #' `l1b` values are reported in `failed_l1b` and `failed_j`.
+#' 
+#' @importFrom ggplot2 ggplot aes geom_line geom_point labs theme_minimal
 #' 
 #' @export  
 

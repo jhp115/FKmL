@@ -24,35 +24,35 @@ between trajectories across multiple variables. Follows the same format used in 
 
 \item{seed}{A numeric value used to set the random seed for reproducibility.}
 
-\item{l1b}{A numeric vector of L1-norm constraint values to test during clustering. These values
+\item{l1b}{A numeric vector of \eqn{\ell_1} norm constraint values to test during clustering. These values
 control the sparsity of the weights during clustering.}
 
 \item{plot.gap}{Logical; if \code{TRUE} (default), plots the gap between actual and permuted clustering results.}
 
-\item{plot.gap.l1b}{Logical; if \code{TRUE} (default), plots the gap against L1-norm constraint values.
+\item{plot.gap.l1b}{Logical; if \code{TRUE} (default), plots the gap against \eqn{\ell_1} norm constraint values.
 If \code{FALSE}, plots against the number of nonzero weights.}
 }
 \value{
 A list containing the following components:
 \describe{
-\item{totss}{A numeric vector of total within-cluster sum of squared distances for each L1-norm value.}
-\item{permtotss}{A matrix of total sum of squared distances for each permutation and each L1-norm value.}
-\item{nnonzerowss}{A numeric vector of the number of nonzero weights for each L1-norm value.}
+\item{totss}{A numeric vector of total within-cluster sum of squared distances for each \eqn{\ell_1} norm value.}
+\item{permtotss}{A matrix of total sum of squared distances for each permutation and each \eqn{\ell_1} norm value.}
+\item{nnonzerowss}{A numeric vector of the number of nonzero weights for each \eqn{\ell_1} norm value.}
 \item{gaps}{A numeric vector of gap statistics: the difference between observed and permuted clustering results.}
 \item{sdgaps}{A numeric vector of standard deviations of the gaps across permutations.}
-\item{l1bounds}{A vector of L1-norm constraint values that were successfully processed without error.}
-\item{bestl1b}{The L1-norm constraint value that yielded the largest gap.}
+\item{l1bounds}{A vector of \eqn{\ell_1} norm constraint values that were successfully processed without error.}
+\item{bestl1b}{The \eqn{\ell_1} norm constraint value that yielded the largest gap.}
 \item{failed_j}{Indices of \code{l1b} values that caused errors during the clustering process.}
-\item{failed_l1b}{The actual L1-norm values that caused errors.}
+\item{failed_l1b}{The actual \eqn{\ell_1} norm values that caused errors.}
 }
 }
 \description{
 Performs a permutation-based analysis to evaluate clustering results across different
-values of the L1-norm constraint (\code{s}). This function is designed to help determine the
-most appropriate L1-norm value by comparing the observed clustering outcome with those
+values of the \eqn{\ell_1} norm constraint (\code{s}). This function is designed to help determine the
+most appropriate \eqn{\ell_1} norm value by comparing the observed clustering outcome with those
 obtained under random permutations.
 
-The function computes gap statistics for each L1-norm constraint value based on permuted
+The function computes gap statistics for each \eqn{\ell_1} norm constraint value based on permuted
 versions of the input distance array, and identifies the optimal \code{s} as the one
 maximizing the gap statistic. Optional plots can visualize the gap patterns.
 }

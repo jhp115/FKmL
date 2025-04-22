@@ -37,17 +37,15 @@ Each slice \code{[, , k]} is a distance matrix for variable \code{k}.
 \description{
 This function standardizes multidimensional functional data using provided scaling factors,
 computes pairwise Fréchet distances between trajectories for each variable, and returns a
-distance array (3D array of distance matrices).
+distance array (3-dimensional array of distance matrices).
 }
 \details{
 The \code{dist.array} function first applies scaling to the \code{Time} and each measured variable.
 Then, it computes pairwise Fréchet distances between trajectories for each variable separately.
-The output is a 3D array where each slice corresponds to a variable-specific distance matrix.
+The output is a 3-dimensional array in which each slice corresponds to a variable-specific distance matrix.
 
-Unlike the mfkml() function, which requires at least three measurements for an entire trajectory,
-the SFKmL method (which uses \code{dist.array}) allows for trajectories with missing values as long as
-each variable has at least three time points for each trajectory. Therefore, \code{dt} may include missing values.
-}
-\seealso{
-\code{\link{mfkml}}, \code{\link{SFclust}}
+Unlike the \code{mfkml} function, which requires at least three measurements across time for each trajectory,
+the SFKmL ((Sparse multi-dimensional Fréchet distance-based K-medoids for Longitudinal data), which uses \code{dist.array},
+allows for trajectories with missing values, as long as each variable has at least three time points for each trajectory.
+Therefore, \code{dt} may include missing values.
 }

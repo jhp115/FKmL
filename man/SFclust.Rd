@@ -11,7 +11,7 @@ SFclust(k, seed, l1bound, dist.ary, maxIter = 20, eps = 1e-04)
 
 \item{seed}{A numeric value used to set the random seed for reproducibility.}
 
-\item{l1bound}{A bound on the L1 norm for the weight updates. It must lie between 1 and the square root of the number of variables.}
+\item{l1bound}{A bound on the \eqn{\ell_1} norm for the weight updates. It must lie between 1 and the square root of the number of variables.}
 
 \item{dist.ary}{A 3-dimensional array of pairwise Fréchet distances. The array should be of shape (n, n, p), where \code{n} is the number of trajectories and
 \code{p} is the number of variables. Each \code{dist.ary[,,j]} stores the pairwise distances for the \code{j}-th variable.}
@@ -36,10 +36,8 @@ scheme and Fréchet distance. The method iteratively updates cluster assignments
 and feature weights subject to an \eqn{\ell_1} norm constraint.
 }
 \details{
-The function assumes that the input \code{dist.ary} contains pairwise distances between
-trajectories for each feature, using a distance metric such as generalized Fréchet distance.
-Clustering is performed via a k-medoids algorithm (using \code{UpdateCs.SFclust}), while feature
-weights are updated using between-cluster sum of squares (BCSS) with sparsity control
-(via \code{UpdateWs.SFclust} and \code{optim.w}).
-If the number of features is one, only clustering is performed and no feature weighting is applied.
+The function assumes that the input \code{dist.array} contains pairwise distances between trajectories for each variable,
+using the generalized Fréchet distance. Clustering is performed via a k-medoids algorithm,
+and feature weights are updated using between-cluster sum of squares (BCSS) with sparsity control.
+If the number of variables is one, only clustering is performed, and no variable weighting is applied.
 }
