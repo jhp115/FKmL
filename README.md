@@ -1,4 +1,4 @@
-# FKmL: A Package for Fréchet Distance-Based K-means and Extensions for Longitudinal Data
+# FKmL: A package for Fréchet distance-based K-means and extensions for Longitudinal data
 
 The **`FKmL`** package provides shape-based clustering algorithms for multidimensional longitudinal data, using the generalized Fréchet distance to compare trajectory shapes. Traditional clustering approaches often have difficulty accounting for time shifts or speed variations in trajectories, while shape-based clustering methods, like those implemented in this package, offer greater flexibility in handling such variation.
 
